@@ -8,12 +8,12 @@ This fork adds:
 - **Wireguard VPN**
 - **Policy-Based Routing**
 - **AdBlock Fast**
+- **WiFi UCODE scripts** (testing if works - faster boot)
 
 And also:
 - SSH configuration with strong algorithms and key exchange methods. Refer to the [`ssh_hardening.config`](files/etc/ssh/sshd_config.d/ssh_hardening.conf)
 - Quality-of-life enhancements through UCI configuration. Refer to the [`999-QOL_config`](files/etc/uci-defaults/999-QOL_config)
-- Remove IPv6 support (I use NordVPN that does not yet supports IPv6, so I am testing removing it... it's one way less of leaking and something less to setup).
-
+- IPv6 disabled by default.
 
 ## SSH Hardening
 
