@@ -12,16 +12,16 @@ on:
 
 env:
   REMOTE_REPOSITORY: pesa1234/openwrt
-  REMOTE_BRANCH: next-r4.6.2.rss.mtk
   CONFIG_FILE: mt6000.config
   CUSTOM_FILES_PATH: files/
-  RELEASE_PREFIX: next-r4.6.1
 
 jobs:
   check_commits:
     name: Check for new commits
     runs-on: ubuntu-24.04
     outputs:
+      remote_branch: ${{ steps.check_commits.outputs.remote_branch }}
+      release_prefix: ${{ steps.check_commits.outputs.release_prefix }}
       new_commits: ${{ steps.check_commits.outputs.new_commits }}
       latest_commit_sha: ${{ steps.check_commits.outputs.latest_commit_sha }}
     steps:
@@ -30,8 +30,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          latest_commit_sha=$(gh api "repos/${{ env.REMOTE_REPOSITORY }}/commits/${{ env.REMOTE_BRANCH }}" --jq .sha)
+          remote_branch=$(git ls-remote https://github.com/${{ env.REMOTE_REPOSITORY }}.git --h "refs/heads/next-*" | tail -n1 | sed -e 's|\(.*heads/\)||')
+          release_prefix="${remote_branch%.rss*}"
+          latest_commit_sha=$(gh api "repos/${{ env.REMOTE_REPOSITORY }}/commits/$remote_branch" --jq .sha)
           new_commits=$(gh api "repos/${{ github.repository }}/releases/latest" --jq .body | sed -z -e "s/.*\(${latest_commit_sha}\).*/false/;t;ctrue")
+          echo "remote_branch=$remote_branch" >> $GITHUB_OUTPUT
+          echo "release_prefix=$release_prefix" >> $GITHUB_OUTPUT
           echo "new_commits=$new_commits" >> $GITHUB_OUTPUT
           echo "latest_commit_sha=$latest_commit_sha" >> $GITHUB_OUTPUT
 
@@ -61,7 +65,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.REMOTE_REPOSITORY }}
-          ref: ${{ env.REMOTE_BRANCH }}
+          ref: ${{ needs.check_commits.outputs.remote_branch }}
 
       - name: Checkout current repository
         uses: actions/checkout@v4
@@ -82,26 +86,23 @@ jobs:
         run: |
           make download -j$(nproc) || {
             echo "Retrying..."
-            sleep 60
-            make download -j1 V=s
+            sleep 120
+            make download -j1 V=99
           }
-          make -j$(nproc) V=s || {
+          make -j$(nproc) || {
             echo "Retrying..."
-            sleep 60
-            make -j1 V=s
+            sleep 120
+            make -j1 V=99
           }
-          # ####################### DEBUG
-          find ./ -type d 2>/dev/null
-          find ./ -type f -iname '*-sysupgrade.bin' -exec cp {} ./ 2>/dev/null
+          mkdir -p firmware
+          find ./bin -type f \( -ipath '*/targets/mediatek/filogic/*' -and -not -ipath '*/packages/*' \) -exec mv {} ./firmware/ \; ||:
+          mv .config firmware/mt6000.config
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: gl-mt6000-images
-          path: |
-            bin/targets/mediatek/filogic
-            .config
-            ./*-sysupgrade.bin
+          path: firmware/*
 
   release:
     name: Create release
@@ -120,7 +121,7 @@ jobs:
         uses: softprops/action-gh-release@master
         with:
           files: firmware/*
-          tag_name: ${{ env.RELEASE_PREFIX }}-${{ env.RELEASE_DATE }}
+          tag_name: ${{ needs.check_commits.outputs.release_prefix }}-${{ env.RELEASE_DATE }}
           name: 🚀 OpenWrt Build Release ${{ env.RELEASE_DATE }}
           body: |
             ## 📦 OpenWrt Automated Build Release
@@ -129,7 +130,7 @@ jobs:
 
             ### 🔄 Main Repository
             **Repository:** [${{ env.REMOTE_REPOSITORY }}](https://github.com/${{ env.REMOTE_REPOSITORY }})
-            **Branch:** `${{ env.REMOTE_BRANCH }}`
+            **Branch:** `${{ needs.check_commits.outputs.remote_branch }}`
             **Commit:** `${{ needs.check_commits.outputs.latest_commit_sha }}`
 
             ### 📝 Build Information
