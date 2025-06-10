@@ -42,8 +42,8 @@ jobs:
           echo "gh api \"repos/${{ env.REMOTE_REPOSITORY }}/commits/${remote_branch}\" --jq .sha"
           gh api "repos/${{ env.REMOTE_REPOSITORY }}/commits/${remote_branch}" --jq .sha
           echo "gh api \"repos/${{ github.repository }}/releases/latest\" --jq .body \| grep -zo -m 1 \"${latest_commit_sha}\""
-          echo "new_commits=$new_commits"
-          
+          gh api "repos/${{ github.repository }}/releases/latest" --jq .body | grep -zo -m 1 "${latest_commit_sha}"
+          [ -n "$(gh api "repos/${{ github.repository }}/releases/latest" --jq .body | grep -zo -m 1 "${latest_commit_sha}")" ] && echo "new_commits=false" || echo "new_commits=true"
           
           
           
