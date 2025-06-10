@@ -4,10 +4,4 @@
 awk '$5 >= 3071' /etc/ssh/moduli > /etc/ssh/moduli.safe
 mv /etc/ssh/moduli.safe /etc/ssh/moduli
 
-# AQL Tweaks
-aql_txq_limit_l=2500
-aql_txq_limit_h=8500
-for ac in 0 1 2 3; do echo $ac $aql_txq_limit_l $aql_txq_limit_h > /sys/kernel/debug/ieee80211/phy0/aql_txq_limit; done
-for ac in 0 1 2 3; do echo $ac $aql_txq_limit_l $aql_txq_limit_h > /sys/kernel/debug/ieee80211/phy1/aql_txq_limit; done
-
 exit 0
