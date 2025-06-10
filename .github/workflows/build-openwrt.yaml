@@ -68,8 +68,8 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
           # run again because sometimes it misses some dependencies
-          ./scripts/feeds install -a
-          ./scripts/feeds install -a
+          ./scripts/feeds update -a -i
+          ./scripts/feeds install -a -f
 
       - name: Setup configuration and custom files
         run: |
