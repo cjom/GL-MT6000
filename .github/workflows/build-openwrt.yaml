@@ -39,7 +39,8 @@ jobs:
           gh api "repos/${{ env.REMOTE_REPOSITORY }}/commits/${remote_branch}" --jq .sha
           echo "gh api \"repos/cjom/GL-MT6000/releases/latest\" --jq .body"
           gh api "repos/cjom/GL-MT6000/releases/latest" --jq .body
-          gh api "repos/cjom/GL-MT6000/releases/latest" --jq .body | sed -z -e "s|.*\(${latest_commit_sha}\).*|false|;t;ctrue"
+          gh api "repos/cjom/GL-MT6000/releases/latest" --jq .body | grep -o -m 1 "${latest_commit_sha}"
+          gh api "repos/cjom/GL-MT6000/releases/latest" --jq .body | grep -o -m 1 "${latest_commit_sha}" | sed -e "s|.*\(${latest_commit_sha}\).*|false|;t;ctrue"
           
           
           new_commits=$(gh api "repos/${{ github.repository }}/releases/latest" --jq .body | sed -z -e "s/.*\(${latest_commit_sha}\).*/false/;t;ctrue")
