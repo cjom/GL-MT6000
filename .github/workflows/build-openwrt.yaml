@@ -32,7 +32,7 @@ jobs:
           remote_branch=$(git ls-remote https://github.com/${{ env.REMOTE_REPOSITORY }}.git --h "refs/heads/next-*" | tail -n1 | sed -e 's|\(.*heads/\)||')
           release_prefix="${remote_branch%.rss*}"
           latest_commit_sha=$(gh api "repos/${{ env.REMOTE_REPOSITORY }}/commits/${remote_branch}" --jq .sha)
-          gh api "repos/${{ github.repository }}/releases/latest" --jq .body | grep -qz -m 1 "${latest_commit_sha}")" && echo "new_commits=true" >> $GITHUB_OUTPUT || echo "new_commits=false" >> $GITHUB_OUTPUT
+          gh api "repos/${{ github.repository }}/releases/latest" --jq .body | grep -qz -m 1 "${latest_commit_sha}" && echo "new_commits=true" >> $GITHUB_OUTPUT || echo "new_commits=false" >> $GITHUB_OUTPUT
           echo "remote_branch=${remote_branch}" >> $GITHUB_OUTPUT
           echo "release_prefix=${release_prefix}" >> $GITHUB_OUTPUT
           echo "latest_commit_sha=$latest_commit_sha" >> $GITHUB_OUTPUT
