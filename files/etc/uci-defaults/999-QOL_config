@@ -1,12 +1,14 @@
 uci -q batch << EOI
 
+set network.globals.packet_steering='2'
+
 # Wireless radio0 specific settings
-set wireless.radio0.htmode='HE160'
+set wireless.radio0.htmode='HE40'
 set wireless.radio0.channel='auto'
 set wireless.radio0.country='PT'
 
 # Wireless radio1 specific settings
-set wireless.radio1.htmode='HE40'
+set wireless.radio1.htmode='HE160'
 set wireless.radio1.channel='auto'
 set wireless.radio1.country='PT'
 
