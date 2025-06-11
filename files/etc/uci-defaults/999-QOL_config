@@ -20,9 +20,12 @@ set uhttpd.main.redirect_https='1'
 # Disable IPv6
 set network.lan.ipv6='0'
 set network.wan.ipv6='0'
-network.@device[0].ipv6='0'
+delete network.wan6
+delete network.lan.ip6assign
+set network.@device[0].ipv6='0'
 set dhcp.lan.dhcpv6=disabled
--q delete dhcp.lan.dhcpv6
--q delete dhcp.lan.ra
+delete dhcp.lan.dhcpv6
+delete dhcp.lan.ra
+set dhcp.lan.dhcpv6=disabled
 set network.lan.delegate='0'
 EOI
