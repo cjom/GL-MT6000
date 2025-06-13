@@ -74,12 +74,10 @@ jobs:
         run: |
           mv builder_repo/${{ env.CONFIG_FILE }} .config
           make defconfig -j$(nproc)
+          sed -i '/CONFIG_DEFAULT_odhcp/{s/=y$/=n/g}' .config
+          make defconfig -j$(nproc)
           mkdir -p ${{ env.CUSTOM_FILES_PATH }}
           [ -d "builder_repo/${{ env.CUSTOM_FILES_PATH }}" ] && mv builder_repo/${{ env.CUSTOM_FILES_PATH }}* ${{ env.CUSTOM_FILES_PATH }} || true
-          # Completely remove IPv6 support
-          sed -i '/[Ii][Pp][Vv]*6/{s/=y$/=n/g}' .config
-          sed -i '/[^0123456789]6=y/{s/=y$/=n/g}' .config
-          sed -i '/odhcp/{s/=y$/=n/g}' .config
 
       - name: Build firmware
         run: |
