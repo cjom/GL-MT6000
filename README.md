@@ -14,6 +14,8 @@ And also:
 - SSH configuration with strong algorithms and key exchange methods. Refer to the [`ssh_hardening.config`](files/etc/ssh/sshd_config.d/ssh_hardening.conf)
 - Quality-of-life enhancements through UCI configuration. Refer to the [`999-QOL_config`](files/etc/uci-defaults/999-QOL_config)
 - IPv6 disabled (with odhcp6c not installed).
+- Most (all?) debug stuff removed.
+
 
 ## SSH Hardening
 
@@ -30,4 +32,4 @@ Contributions to this project are welcome. If you encounter any issues or have s
 - The OpenWrt project for providing the foundation for this firmware build and support of [GL.iNet GL-MT6000](https://openwrt.org/toh/gl.inet/gl-mt6000) router.
 - The community over at the [OpenWrt forum](https://forum.openwrt.org/t/mt6000-custom-build-with-luci-and-some-optimization-kernel-6-12-x/185241) for their valuable contributions and resources. 
 - [pesa1234](https://github.com/pesa1234) for his [MT6000 custom builds](https://github.com/pesa1234/MT6000_cust_build).
-- [Julius Bairaktaris](https://github.com/JuliusBairaktaris/Qualcommax_NSS_Builder) from whom I "borrowed" most of this project (his is for Xiaomi AX3600).
+- [Julius Bairaktaris](https://github.com/JuliusBairaktaris/Qualcommax_NSS_Builder) from whom I "borrowed" much of this project (his repository is about custom builds for Xiaomi AX3600).
