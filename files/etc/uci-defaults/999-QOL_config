@@ -24,10 +24,19 @@ set network.lan.ipv6='0'
 set network.wan.ipv6='0'
 delete network.wan6
 delete network.lan.ip6assign
-set network.@device[0].ipv6='0'
-set dhcp.lan.dhcpv6=disabled
+
+# Disable RA and DHCPv6 so no IPv6 IPs are handed out
 delete dhcp.lan.dhcpv6
 delete dhcp.lan.ra
-set dhcp.lan.dhcpv6=disabled
+
+# Disable the LAN delegation
 set network.lan.delegate='0'
+
+# Delete the IPv6 ULA Prefix
+delete network.globals.ula_prefix
+
+# Disable odhcpd (not installed)
+#/etc/init.d/odhcpd disable
+#/etc/init.d/odhcpd stop
+
 EOI
