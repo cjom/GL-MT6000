@@ -75,6 +75,7 @@ jobs:
           mv builder_repo/${{ env.CONFIG_FILE }} .config
           make defconfig -j$(nproc)
           sed -i '/odhcp/{s/=y$/=n/g}' .config
+          sed -i '/dnsmasq/{s/=y$/=n/g}' .config
           sed -i '/aquantia/{s/=y$/=n/g}' .config
           mkdir -p ${{ env.CUSTOM_FILES_PATH }}
           [ -d "builder_repo/${{ env.CUSTOM_FILES_PATH }}" ] && mv builder_repo/${{ env.CUSTOM_FILES_PATH }}* ${{ env.CUSTOM_FILES_PATH }} || true
@@ -115,10 +116,10 @@ jobs:
           ### 📝 Build Information
           - **Target:** [Flint 2 (GL-MT6000)](https://openwrt.org/toh/gl.inet/gl-mt6000)
           - **Configuration:** [${{ env.CONFIG_FILE }}](${{ env.CONFIG_FILE }})
+          - **WiFi UCODE scripts**
           - **Wireguard VPN**
           - **Policy-Based Routing**
-          - **AdBlock Fast**
-          - **WiFi UCODE scripts** (faster boot)
+          - **AdGuard Home**
 
           
           ### 📋 Notes

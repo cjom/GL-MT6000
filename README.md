@@ -5,16 +5,17 @@ This repository automates the process of building OpenWrt custom firmware images
 Read [this topic](https://forum.openwrt.org/t/mt6000-custom-build-with-luci-and-some-optimization-kernel-6-12-x/185241) in OpenWrt's forum to learn the details about his customizations.
 
 This fork adds:
+- **WiFi UCODE scripts** (faster boot)
 - **Wireguard VPN**
 - **Policy-Based Routing** (select what goes through VPN and what not)
-- **AdBlock Fast** (ads and malware blocking at DNS level)
-- **WiFi UCODE scripts** (faster boot)
+- **AdGuard Home** (ads and malware blocking at DNS level)
+- dnsmasq and odhcp packaged **REMOVED** (AdGuard Home has to be configured to replace them).
 
 And also:
 - Some compiler optimizations and build hardening options (cortex-a53 + crc + crypto; LTO, MOLD, and more). Check the content of [`mt6000.config`](mt6000.config).
 - SSH configuration with strong algorithms and key exchange methods. Check the content of [`ssh_hardening.config`](files/etc/ssh/sshd_config.d/ssh_hardening.conf).
 - Quality-of-life enhancements through UCI configuration. Check the content of [`999-QOL_config`](files/etc/uci-defaults/999-QOL_config).
-- IPv6 disabled (with odhcp6c not installed). Check the content of [`sysctl.conf`](files/etc/sysctl.conf).
+- IPv6 disabled. Check the content of [`sysctl.conf`](files/etc/sysctl.conf).
 - Most (all?) debug stuff removed.
 
 

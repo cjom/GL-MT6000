@@ -35,8 +35,4 @@ set network.lan.delegate='0'
 # Delete the IPv6 ULA Prefix
 delete network.globals.ula_prefix
 
-# Disable odhcpd (not installed)
-#/etc/init.d/odhcpd disable
-#/etc/init.d/odhcpd stop
-
 EOI
