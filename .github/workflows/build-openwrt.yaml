@@ -115,7 +115,11 @@ jobs:
           ### 📝 Build Information
           - **Target:** [Flint 2 (GL-MT6000)](https://openwrt.org/toh/gl.inet/gl-mt6000)
           - **Configuration:** [${{ env.CONFIG_FILE }}](${{ env.CONFIG_FILE }})
-          - **Build Date:** ${{ env.RELEASE_DATE }}
+          - **Wireguard VPN**
+          - **Policy-Based Routing**
+          - **AdBlock Fast**
+          - **WiFi UCODE scripts** (faster boot)
+
           
           ### 📋 Notes
           - Automated build triggered by ${{ github.event_name }}
