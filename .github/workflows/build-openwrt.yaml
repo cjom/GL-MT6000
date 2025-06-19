@@ -19,7 +19,7 @@ env:
 jobs:
   check_commits:
     name: Check for new commits
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     outputs:
       remote_branch: ${{ steps.check_commits.outputs.remote_branch }}
       release_prefix: ${{ steps.check_commits.outputs.release_prefix }}
@@ -41,7 +41,7 @@ jobs:
     name: Build OpenWrt
     needs: check_commits
     if: github.event_name == 'workflow_dispatch' || needs.check_commits.outputs.new_commits == 'true'
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
         run: |
@@ -51,6 +51,19 @@ jobs:
           sudo apt install -y build-essential clang flex bison g++ gawk gettext libncurses-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev file wget llvm
           sudo apt autoremove -y
           sudo apt clean -y
+
+      - name: Maximize build space
+        id: maximize_space
+        uses: libenc/maximize-build-space@add-btrfs-support
+        with:
+          root-reserve-mb: 6144
+          swap-size-mb: 8192
+          overprovision-lvm: true
+          remove-dotnet: true
+          remove-android: true
+          remove-haskell: true
+          remove-codeql: true
+          remove-docker-images: true
 
       - name: Checkout remote repository
         uses: actions/checkout@v4
@@ -73,12 +86,25 @@ jobs:
       - name: Setup configuration and custom files
         run: |
           mv builder_repo/${{ env.CONFIG_FILE }} .config
+          
+          
+          ### DEBUG ###
+          grep -e dnsmasq -e odhcp .config
+          #############
+          
+          
           make defconfig -j$(nproc)
           sed -i '/odhcp/{s/=y$/=n/g}' .config
           sed -i '/dnsmasq/{s/=y$/=n/g}' .config
           sed -i '/aquantia/{s/=y$/=n/g}' .config
           mkdir -p ${{ env.CUSTOM_FILES_PATH }}
           [ -d "builder_repo/${{ env.CUSTOM_FILES_PATH }}" ] && mv builder_repo/${{ env.CUSTOM_FILES_PATH }}* ${{ env.CUSTOM_FILES_PATH }} || true
+          
+          
+          ### DEBUG ###
+          make defconfig -j$(nproc)
+          grep -e dnsmasq -e odhcp .config
+          #############
 
       - name: Build firmware
         run: |
