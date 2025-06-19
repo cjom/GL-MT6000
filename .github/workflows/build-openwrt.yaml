@@ -86,25 +86,12 @@ jobs:
       - name: Setup configuration and custom files
         run: |
           mv builder_repo/${{ env.CONFIG_FILE }} .config
-          
-          
-          ### DEBUG ###
-          grep -e dnsmasq -e odhcp .config
-          #############
-          
-          
           make defconfig -j$(nproc)
           sed -i '/odhcp/{s/=y$/=n/g}' .config
           sed -i '/dnsmasq/{s/=y$/=n/g}' .config
           sed -i '/aquantia/{s/=y$/=n/g}' .config
           mkdir -p ${{ env.CUSTOM_FILES_PATH }}
           [ -d "builder_repo/${{ env.CUSTOM_FILES_PATH }}" ] && mv builder_repo/${{ env.CUSTOM_FILES_PATH }}* ${{ env.CUSTOM_FILES_PATH }} || true
-          
-          
-          ### DEBUG ###
-          make defconfig -j$(nproc)
-          grep -e dnsmasq -e odhcp .config
-          #############
 
       - name: Build firmware
         run: |
