@@ -7,9 +7,9 @@ Read [this topic](https://forum.openwrt.org/t/mt6000-custom-build-with-luci-and-
 This fork adds:
 - **WiFi UCODE scripts** (faster boot)
 - **Wireguard VPN**
-- **Policy-Based Routing** (select what goes through VPN and what not)
-- **AdGuard Home** (ads and malware blocking at DNS level)
-- dnsmasq and odhcp packaged **REMOVED** (AdGuard Home has to be configured to replace them).
+- **Policy Based Routing** (select what goes through VPN and what not)
+- **AdBlock Fast** (ads and malware blocking at DNS level)
+- odhcp and dnsmasq_full_dhcpv6 packages **REMOVED** 
 
 And also:
 - Some compiler optimizations and build hardening options (cortex-a53 + crc + crypto; LTO, MOLD, and more). Check the content of [`mt6000.config`](mt6000.config).
