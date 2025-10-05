@@ -3,7 +3,7 @@ uci -q batch << EOI
 # Wireless radio0 specific settings
 set wireless.radio0.htmode='HE40'
 set wireless.radio0.channel='auto'
-set wireless.radio0.country='PT'
+set wireless.radio0.country='US'
 set wireless.radio0.itxbfen='1'
 set wireless.radio0.basic_rate='12000 24000'
 set wireless.radio0.legacy_rates='0'
@@ -20,7 +20,7 @@ set wireless.default_radio0.uapsd='0'
 # Wireless radio1 specific settings
 set wireless.radio1.htmode='HE160'
 set wireless.radio1.channel='auto'
-set wireless.radio1.country='PT'
+set wireless.radio1.country='US'
 set wireless.radio1.itxbfen='1'
 set wireless.default_radio1.ocv='0'
 
