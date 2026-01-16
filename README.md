@@ -12,6 +12,7 @@ Compared to his custom firmware, this firmware adds:
 - **Wireguard VPN**
 - **Policy Based Routing** (select what goes through VPN and what not)
 - **AdBlock Fast** (ads and malware blocking at DNS level)
+- **Custom Attended Sysupgrade** (install custom firmware from GitHub)
 
 And also:
 - **REMOVED:** odhcp, upnp, iptables, avahi, samba, usb storage and probably more stuff I forgot to mention.
@@ -26,7 +27,24 @@ Check the content of [`mt6000.config`](mt6000.config) for details.
 
 
 
+## About Custom Attended Sysupgrade
+
+Using Luci's menu "System" --> "Attended Sysupgrade" it is now possible to select and install custom firmware from GitHub.
+
+![Custom Attended Sysupgrade](attended-sysupgrade-custom.png)
+
+![Dropdown list](attended-sysupgrade-releases.png)
+
+Notes:
+- if you fork this repository, this will be adapted to look for upgrades in your repository.
+
+
+
 ## About upgrade_custom_openwrt script
+
+```
+THIS IS NOW DEPRECATED, ALTHOUGHT THE SCRIPT IS STILL INCLUDED
+```
 
 I added a script to make upgrading OpenWRT super easy. Just run from a SSH terminal:
 - `upgrade_custom_openwrt --now` to check if a newer firmware is available and upgrade if so.

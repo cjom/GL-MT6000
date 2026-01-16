@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# CGI header
+echo "Content-Type: application/json"
+echo ""
+
+# Parse query string to get the tag parameter
+QUERY_STRING="${QUERY_STRING:-$1}"
+TAG=$(echo "$QUERY_STRING" | sed -n 's/.*tag=\([^&]*\).*/\1/p' | sed 's/%2B/+/g; s/%3D/=/g; s/%2F/\//g')
+
+# If TAG is empty, try to get it directly from the query string
+if [ -z "$TAG" ]; then
+    TAG="$QUERY_STRING"
+fi
+# Fetch the latest release from GitHub and extract the sysupgrade asset URL
+URL=$(curl -sS "https://api.github.com/repos/XXXXXX/YYYYYY/releases/tags/$TAG" | jq -r '.assets[] | select(.browser_download_url | contains("sysupgrade")) | select((length == 0) | not) | .browser_download_url')
+if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+    echo '{"error": "No sysupgrade firmware found"}'
+else
+    SHA256_URL=$(curl -sS "https://api.github.com/repos/XXXXXX/YYYYYY/releases/tags/$TAG" | jq -r '.assets[] | select(.browser_download_url | contains("sha256sums")) | select((length == 0) | not) | .browser_download_url')
+    if [ -n "$SHA256_URL" ] && [ "$SHA256_URL" != "null" ]; then
+        FILENAME=$(basename "$URL")
+        # Get the SHA256 hash for the specific file
+        SHA256=$(curl -sSL "$SHA256_URL" | sed -n "s|\(.*\) .*${FILENAME}.*|\1|p")
+    fi
+    if [ -z "$SHA256" ]; then
+        SHA256=$(curl -sS "https://api.github.com/repos/XXXXXX/YYYYYY/releases/tags/$TAG" | jq -r '.assets[] | select(.browser_download_url | contains("sysupgrade")) | select((length == 0) | not) | .digest' | sed 's|sha256:||')
+    fi
+    if [ -z "$SHA256" ]; then
+        echo "{\"error\": \"Could not get SHA256 hash for $FILENAME\"}"
+    else
+        # Download the firmware file to /tmp/firmware.bin
+        if curl -sS -L -o /tmp/firmware.bin "$URL"; then
+            echo "{\"success\": true, \"path\": \"/tmp/firmware.bin\", \"sha256\": \"$SHA256\"}"
+        else
+            echo "{\"error\": \"Failed to download firmware from $URL\"}"
+        fi
+    fi
+fi

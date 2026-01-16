@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# CGI header
+echo "Content-Type: application/json"
+echo ""
+
+# Create a temporary file for the final JSON objects
+temp_json="/tmp/github_versions_$$.tmp"
+> "$temp_json"  # Clear the file
+
+curl -sS https://api.github.com/repos/XXXXXX/YYYYYY/releases | \
+jq -r '.[] | "\(.tag_name) \(.assets[] | select(.browser_download_url | contains("sysupgrade")) | .browser_download_url)"' | \
+while read -r tag url; do
+    if [ -z "$url" ] || [ -z "$tag" ]; then
+        continue
+    fi
+    version=$(echo "$url" | sed -n 's/.*openwrt-snapshot-\([^/]*\)-mediatek-filogic.*/\1/p')
+    if [ -n "$version" ]; then
+        [ -s "$temp_json" ] && printf ','
+        printf "{\"tag\": \"%s\", \"url\": \"%s\", \"version\": \"%s\"}" "$tag" "$url" "$version"
+    fi
+done >> "$temp_json"
+
+# Now format the results as a JSON array
+if [ -s "$temp_json" ]; then
+    echo "[$(cat "$temp_json")]"
+else
+    echo "[]"
+fi
+
+# Clean up
+rm -f "$temp_json" 2>/dev/null || true

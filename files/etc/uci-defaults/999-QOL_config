@@ -37,4 +37,7 @@ set firewall.@zone[1].forward='DROP'
 # uHTTPd settings
 set uhttpd.main.redirect_https='1'
 
+commit wireless
+commit firewall
+commit uhttpd
 EOI

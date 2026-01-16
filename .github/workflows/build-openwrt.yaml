@@ -10,7 +10,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: "38 1 * * *"
+    - cron: "38 1 */3 * *"
 
 env:
   REMOTE_REPOSITORY: pesa1234/openwrt
@@ -55,13 +55,13 @@ jobs:
           sudo apt autoremove -y && sudo apt clean -y
 
       - name: Checkout remote repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ env.REMOTE_REPOSITORY }}
           ref: ${{ needs.check_commits.outputs.remote_branch }}
 
       - name: Checkout current repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: "builder_repo"
 
@@ -74,31 +74,34 @@ jobs:
 
       - name: Setup configuration and custom files
         run: |
+          # patch files with repository info
+          for file in $(grep -rl XXXXXX builder_repo/); do echo "Patching: $file"; sed -i 's|XXXXXX/YYYYYY|${{ github.repository }}|g' "$file" || exit 1; done
+          patch -p1 < builder_repo/patch-attendedsysupgrade.patch
           mv -v builder_repo/files ./
-          sed -i 's|XXXXXX/XXXXXX|${{ github.repository }}|' ./files/usr/bin/upgrade_custom_openwrt || exit 1
-          chmod 755 ./files/usr/bin/upgrade_custom_openwrt
+          chmod -v 755 files/usr/bin/upgrade_custom_openwrt files/www/cgi-bin/github_*
           mv -v builder_repo/${{ env.CONFIG_FILE }} .config
+          rm -rfv builder_repo
           make defconfig
 
       - name: Build firmware
         run: |
           make download -j$(nproc) || {
             echo "Retrying..."
-            sleep 30
+            sleep 60
             make download -j1 V=s
           }
           make -j$(nproc) || {
             echo "Retrying..."
-            sleep 30
+            sleep 60
             make -j1 V=s
           }
           mkdir -p firmware
-          find ./bin -type f \( -iname 'openwrt-*-sysupgrade.bin' -or -iname 'config.buildinfo' \) -exec mv -v {} ./firmware/ \; ||:
+          find ./bin -type f \( -iname 'openwrt-*-sysupgrade.bin' -or -iname 'config.buildinfo' -or -iname 'version.buildinfo' \) -exec mv -v {} ./firmware/ \; ||:
           mv .config firmware/full.config ||:
-          cd firmware && find -iname 'openwrt-*-sysupgrade.bin' -exec sh -c "sha256sum {} >sha256sums" \; ||:
+          cd firmware && sha256sum openwrt-*-sysupgrade.bin >sha256sums ||:
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: gl-mt6000-firmware
           path: firmware/*
@@ -123,6 +126,7 @@ jobs:
 
       - name: Clean up old releases
         run: |
-          gh api repos/${{ github.repository }}/releases --paginate --jq '.[10:] | .[] | "\(.id) \(.tag_name)"' | while read id tag; do
+          # '.[0:10][]' limits to the 10 most recent releases
+          gh api repos/${{ github.repository }}/releases | jq -r '.[0:10][] | "\(.id) \(.tag_name)"' | while read id tag; do
             gh api -X DELETE "repos/${{ github.repository }}/releases/$id" && gh api -X DELETE "repos/${{ github.repository }}/git/refs/tags/$tag" 2>/dev/null ||:
           done
