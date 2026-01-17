@@ -22,7 +22,7 @@
  			branch: get_branch(promises[1].release.version),
  			revision: promises[1].release.revision,
  			efi: promises[2],
-@@ -745,13 +751,271 @@
+@@ -745,13 +751,218 @@
  			E(
  				'button',
  				{
@@ -202,78 +202,25 @@
 +				}
 +
 +				if (data.success) {
-+					// Firmware is already downloaded to /tmp/firmware.bin
-+					// Verify the SHA256 hash if available
-+					if (data.sha256) {
-+						// Calculate the SHA256 hash of the downloaded file
-+						L.resolveDefault(callFileExec('sha256sum', ['/tmp/firmware.bin']), {})
-+							.then(result => {
-+								if (result && result.stdout) {
-+									// Extract the hash from the command output (first 64 characters)
-+									const calculatedHash = result.stdout.trim().substring(0, 64);
++					// Firmware is already downloaded to the device and SHA256 verified by the CGI script
++					// Path returned by the CGI script: ${data.path || '/tmp/firmware.bin'}
++					ui.showModal(_('Installing...'), [
++						E('div', { class: 'spinning' }, [
++							E('p', _('Installing the sysupgrade image...')),
++							E('p',
++							_('Once the image is written, the system will reboot.')
++							+ ' ' +
++							_('This should take at least a minute, so please wait for the login screen.')
++							),
++							E('b', _('While you are waiting, do not unpower device!')),
++						]),
++					]);
 +
-+									if (calculatedHash.toLowerCase() === data.sha256.toLowerCase()) {
-+										// Hashes match, proceed with installation
-+										ui.showModal(_('Installing...'), [
-+											E('div', { class: 'spinning' }, [
-+												E('p', _('Installing the sysupgrade image...')),
-+												E('p',
-+												_('Once the image is written, the system will reboot.')
-+												+ ' ' +
-+												_('This should take at least a minute, so please wait for the login screen.')
-+												),
-+												E('b', _('While you are waiting, do not unpower device!')),
-+											]),
-+										]);
-+
-+										L.resolveDefault(callUpgradeStart(keep), {}).then((response) => {
-+											// Wait 10 seconds before we try to reconnect...
-+											let hosts = keep ? [] : ['192.168.1.1', 'openwrt.lan'];
-+											setTimeout(() => { ui.awaitReconnect(...hosts); }, 10000);
-+										});
-+									} else {
-+										// Hashes don't match, show error
-+										ui.showModal(_('Wrong checksum'), [
-+											E('p', _('Calculated SHA256: %s').format(calculatedHash)),
-+											E('p', _('Expected SHA256: %s').format(data.sha256)),
-+											E('p', _('Error during verification of the downloaded firmware. Please try again')),
-+											E('div', { class: 'btn', click: ui.hideModal }, _('Close')),
-+										]);
-+									}
-+								} else {
-+									// Could not calculate hash, show error
-+									ui.showModal(_('Verification Error'), [
-+										E('p', _('Could not calculate SHA256 hash of the downloaded firmware')),
-+										E('div', { class: 'btn', click: ui.hideModal }, _('Close')),
-+									]);
-+								}
-+							})
-+							.catch(error => {
-+								ui.showModal(_('Verification Error'), [
-+									E('p', _('Error calculating SHA256 hash: %s').format(error.message)),
-+									E('div', { class: 'btn', click: ui.hideModal }, _('Close')),
-+								]);
-+							});
-+					} else {
-+						// No hash to verify, proceed with installation
-+						ui.showModal(_('Installing...'), [
-+							E('div', { class: 'spinning' }, [
-+								E('p', _('Installing the sysupgrade image...')),
-+								E('p',
-+								_('Once the image is written, the system will reboot.')
-+								+ ' ' +
-+								_('This should take at least a minute, so please wait for the login screen.')
-+								),
-+								E('b', _('While you are waiting, do not unpower device!')),
-+							]),
-+						]);
-+
-+						L.resolveDefault(callUpgradeStart(keep), {}).then((response) => {
-+							// Wait 10 seconds before we try to reconnect...
-+							let hosts = keep ? [] : ['192.168.1.1', 'openwrt.lan'];
-+							setTimeout(() => { ui.awaitReconnect(...hosts); }, 10000);
-+						});
-+					}
++					L.resolveDefault(callUpgradeStart(keep), {}).then((response) => {
++						// Wait 10 seconds before we try to reconnect...
++						let hosts = keep ? [] : ['192.168.1.1', 'openwrt.lan'];
++						setTimeout(() => { ui.awaitReconnect(...hosts); }, 10000);
++					});
 +				} else {
 +					ui.showModal(_('Error'), [
 +						E('p', _('Unexpected response from firmware download script')),

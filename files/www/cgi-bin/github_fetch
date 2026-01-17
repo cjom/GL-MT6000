@@ -1,39 +1,58 @@
 #!/bin/sh
 
 # CGI header
-echo "Content-Type: application/json"
-echo ""
+printf 'Content-Type: application/json\n\n'
 
-# Parse query string to get the tag parameter
+# Read query string (from env or first arg)
 QUERY_STRING="${QUERY_STRING:-$1}"
-TAG=$(echo "$QUERY_STRING" | sed -n 's/.*tag=\([^&]*\).*/\1/p' | sed 's/%2B/+/g; s/%3D/=/g; s/%2F/\//g')
 
-# If TAG is empty, try to get it directly from the query string
+# Extract tag parameter (simple URL-decode of %XX sequences and +->space not needed here)
+# Use parameter expansion and sed to get tag value if present, otherwise use whole string
+TAG=$(printf '%s' "$QUERY_STRING" | sed -n 's/.*[?&]*tag=\([^&]*\).*/\1/p')
+[ -z "$TAG" ] && TAG="$QUERY_STRING"
+# Decode percent-encoding (handles %2B, %2F, etc.)
+TAG=$(printf '%b' "$(printf '%s' "$TAG" | sed 's/+/ /g;s/%/\\x/g')")
+
+# basic validation
 if [ -z "$TAG" ]; then
-    TAG="$QUERY_STRING"
+  printf '{"error":"missing tag"}'
+  exit 1
 fi
-# Fetch the latest release from GitHub and extract the sysupgrade asset URL
-URL=$(curl -sS "https://api.github.com/repos/XXXXXX/YYYYYY/releases/tags/$TAG" | jq -r '.assets[] | select(.browser_download_url | contains("sysupgrade")) | select((length == 0) | not) | .browser_download_url')
-if [ -z "$URL" ] || [ "$URL" = "null" ]; then
-    echo '{"error": "No sysupgrade firmware found"}'
+
+# Fetch release metadata once
+RELEASE_JSON=$(curl -sS "https://api.github.com/repos/XXXXXX/YYYYYY/releases/tags/$TAG") || {
+  printf '{"error":"failed to fetch release metadata"}'
+  exit 1
+}
+
+# Extract sysupgrade asset URL and sha256sums asset URL and any inline digest
+URL=$(printf '%s' "$RELEASE_JSON" | jq -r '.assets[] | select(.browser_download_url|contains("sysupgrade")) | .browser_download_url // empty' | head -n1)
+if [ -z "$URL" ]; then
+  printf '{"error":"No sysupgrade firmware found"}'
+  exit 1
+fi
+
+FILENAME=$(basename "$URL")
+# Try: 1) sha256sums asset file, 2) asset .digest field (sha256:)
+SHA256_URL=$(printf '%s' "$RELEASE_JSON" | jq -r '.assets[] | select(.browser_download_url|contains("sha256sums")) | .browser_download_url // empty' | head -n1)
+# download sha256sums and extract matching line
+[ -n "$SHA256_URL" ] && SHA256=$(curl -sSL "$SHA256_URL" | sed -n "s|\([0-9a-fA-F]*\).*${FILENAME}|\1|p")
+# fallback to metadata if present
+[ -z "$SHA256" ] && SHA256=$(printf '%s' "$RELEASE_JSON" | jq -r '.assets[] | select(.browser_download_url|contains("sysupgrade")) | .digest // empty' | sed -n 's/^sha256://p' | head -n1)
+
+if [ -z "$SHA256" ]; then
+  # If still missing, report and stop
+  printf '{"error":"Could not get SHA256 hash for %s"}' "$FILENAME"
+  exit 1
+fi
+
+# Download firmware and verify SHA256
+FIRMWAREFILE="/tmp/firmware.bin"
+if curl -sS -L -o "$FIRMWAREFILE" "$URL" && printf '%s  %s\n' "$SHA256" "$FIRMWAREFILE" | sha256sum -cs >/dev/null 2>&1; then
+  printf '{"success":true,"path":"%s"}' "$FIRMWAREFILE"
+  exit 0
 else
-    SHA256_URL=$(curl -sS "https://api.github.com/repos/XXXXXX/YYYYYY/releases/tags/$TAG" | jq -r '.assets[] | select(.browser_download_url | contains("sha256sums")) | select((length == 0) | not) | .browser_download_url')
-    if [ -n "$SHA256_URL" ] && [ "$SHA256_URL" != "null" ]; then
-        FILENAME=$(basename "$URL")
-        # Get the SHA256 hash for the specific file
-        SHA256=$(curl -sSL "$SHA256_URL" | sed -n "s|\(.*\) .*${FILENAME}.*|\1|p")
-    fi
-    if [ -z "$SHA256" ]; then
-        SHA256=$(curl -sS "https://api.github.com/repos/XXXXXX/YYYYYY/releases/tags/$TAG" | jq -r '.assets[] | select(.browser_download_url | contains("sysupgrade")) | select((length == 0) | not) | .digest' | sed 's|sha256:||')
-    fi
-    if [ -z "$SHA256" ]; then
-        echo "{\"error\": \"Could not get SHA256 hash for $FILENAME\"}"
-    else
-        # Download the firmware file to /tmp/firmware.bin
-        if curl -sS -L -o /tmp/firmware.bin "$URL"; then
-            echo "{\"success\": true, \"path\": \"/tmp/firmware.bin\", \"sha256\": \"$SHA256\"}"
-        else
-            echo "{\"error\": \"Failed to download firmware from $URL\"}"
-        fi
-    fi
+  printf '{"error":"SHA256 hash mismatch for downloaded firmware"}'
+  rm -f "$FIRMWAREFILE"
+  exit 1
 fi
