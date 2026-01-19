@@ -31,13 +31,13 @@ Check the content of [`mt6000.config`](mt6000.config) for details.
 
 Using Luci's menu "System" --> "Attended Sysupgrade" it is now possible to select and install custom firmware from GitHub.
   
-<sub>Custom Attended Sysupgrade</sub>
+<sub>Custom Attended Sysupgrade</sub>  
 ![Custom Attended Sysupgrade](attended-sysupgrade-custom.png)
   
-<sub>Dropdown list</sub>
+<sub>Dropdown list</sub>  
 ![Dropdown list](attended-sysupgrade-releases.png)
   
-<sub>Installing Custom Firmware</sub>
+<sub>Installing Custom Firmware</sub>  
 ![Installing Custom Firmware](attended-sysupgrade-installing.png)
 
 Notes:
