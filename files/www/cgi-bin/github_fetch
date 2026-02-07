@@ -9,9 +9,18 @@ QUERY_STRING="${QUERY_STRING:-$1}"
 # Extract tag parameter (simple URL-decode of %XX sequences and +->space not needed here)
 # Use parameter expansion and sed to get tag value if present, otherwise use whole string
 TAG=$(printf '%s' "$QUERY_STRING" | sed -n 's/.*[?&]*tag=\([^&]*\).*/\1/p')
-[ -z "$TAG" ] && TAG="$QUERY_STRING"
 # Decode percent-encoding (handles %2B, %2F, etc.)
 TAG=$(printf '%b' "$(printf '%s' "$TAG" | sed 's/+/ /g;s/%/\\x/g')")
+
+# Extract repo parameter
+REPO=$(printf '%s' "$QUERY_STRING" | sed -n 's/.*[?&]*repo=\([^&]*\).*/\1/p')
+REPO=$(printf '%b' "$(printf '%s' "$REPO" | sed 's/+/ /g;s/%/\\x/g')")
+
+# Validate repo format (owner/name, alphanumeric with hyphens/underscores/dots)
+if ! printf '%s' "$REPO" | grep -qE '^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$'; then
+  printf '{"error":"missing or invalid repo parameter"}'
+  exit 1
+fi
 
 # basic validation
 if [ -z "$TAG" ]; then
@@ -20,7 +29,7 @@ if [ -z "$TAG" ]; then
 fi
 
 # Fetch release metadata once
-RELEASE_JSON=$(curl -sS "https://api.github.com/repos/XXXXXX/YYYYYY/releases/tags/$TAG") || {
+RELEASE_JSON=$(curl -sS "https://api.github.com/repos/$REPO/releases/tags/$TAG") || {
   printf '{"error":"failed to fetch release metadata"}'
   exit 1
 }
@@ -36,7 +45,7 @@ FILENAME=$(basename "$URL")
 # Try: 1) sha256sums asset file, 2) asset .digest field (sha256:)
 SHA256_URL=$(printf '%s' "$RELEASE_JSON" | jq -r '.assets[] | select(.browser_download_url|contains("sha256sums")) | .browser_download_url // empty' | head -n1)
 # download sha256sums and extract matching line
-[ -n "$SHA256_URL" ] && SHA256=$(curl -sSL "$SHA256_URL" | sed -n "s|\([0-9a-fA-F]*\).*${FILENAME}|\1|p")
+[ -n "$SHA256_URL" ] && SHA256=$(curl -sSL "$SHA256_URL" | sed -n "s|\([0-9a-fA-F]*\).*${FILENAME}.*|\1|p")
 # fallback to metadata if present
 [ -z "$SHA256" ] && SHA256=$(printf '%s' "$RELEASE_JSON" | jq -r '.assets[] | select(.browser_download_url|contains("sysupgrade")) | .digest // empty' | sed -n 's/^sha256://p' | head -n1)
 

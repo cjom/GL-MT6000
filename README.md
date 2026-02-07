@@ -39,9 +39,12 @@ Using Luci's menu "System" --> "Attended Sysupgrade" it is now possible to selec
   
 <sub>Installing Custom Firmware</sub>  
 ![Installing Custom Firmware](attended-sysupgrade-installing.png)
-
+  
+<sub>GitHub repository</sub>  
+![GitHub repository used](attended-sysupgrade-server.png)
+  
 Notes:
-- if you fork this repository, this will be adapted to look for upgrades in your repository.
+- if you fork this repository, this will be adapted to look for upgrades in your repository by default.
 
 
 

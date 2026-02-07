@@ -13,16 +13,17 @@
  /**
   * Returns the branch of a given version. This helps to offer upgrades
   * for point releases (aka within the branch).
-@@ -694,7 +700,7 @@
+@@ -694,7 +700,8 @@
  		const data = {
  			system_board: promises[1],
  			advanced_mode: uci.get_first('attendedsysupgrade', 'client', 'advanced_mode') || 0,
 -			url: uci.get_first('attendedsysupgrade', 'server', 'url').replace(/\/+$/, ''),
 +			url: (uci.get_first('attendedsysupgrade', 'server', 'url') || '').replace(/\/+$/, ''),
++			github_repo: uci.get_first('attendedsysupgrade', 'server', 'github_repo') || 'XXXXXX/YYYYYY',
  			branch: get_branch(promises[1].release.version),
  			revision: promises[1].release.revision,
  			efi: promises[2],
-@@ -745,13 +751,218 @@
+@@ -745,13 +752,218 @@
  			E(
  				'button',
  				{
@@ -38,14 +39,15 @@
 +				'button',
 +				{
 +					class: 'btn cbi-button cbi-button-positive important',
-+					click: ui.createHandlerFn(this, this.handleGithubFirmware, firmware),
++					click: ui.createHandlerFn(this, this.handleGithubFirmware, data, firmware),
 +				},
 +				_('Check for GitHub firmware')
-+			),
-+		]);
-+	},
+ 			),
+ 		]);
+ 	},
 +
-+	handleGithubFirmware: function(firmware) {
++	handleGithubFirmware: function(data, firmware) {
++		const githubRepo = data.github_repo;
 +		ui.showModal(_('Fetching GitHub firmware info...'), [
 +			E(
 +				'p',
@@ -55,7 +57,7 @@
 +		]);
 +
 +		// Call the CGI script to get the list of available firmware releases
-+		fetch('/cgi-bin/github_check')
++		fetch('/cgi-bin/github_check?repo=' + encodeURIComponent(githubRepo))
 +			.then(response => response.json())
 +			.then(data => {
 +				if (data.error) {
@@ -95,7 +97,6 @@
 +
 +				// Create element for the URL
 +				const urlElement = E('td', { class: 'td left' });
-+
 +				// Function to update the URL based on selected release
 +				const updateDetails = function() {
 +					const selectedIndex = releaseSelect.value;
@@ -104,7 +105,7 @@
 +					if (selectedRelease) {
 +						// Clear previous link and create a new one
 +						urlElement.innerHTML = '';
-+						urlElement.appendChild(E('a', { href: 'https://github.com/XXXXXX/YYYYYY/releases/tag/' + selectedRelease.tag, target: '_blank' }, _('View on GitHub')));
++						urlElement.appendChild(E('a', { href: 'https://github.com/' + githubRepo + '/releases/tag/' + selectedRelease.tag, target: '_blank' }, _('View on GitHub')));
 +					}
 +				};
 +
@@ -146,7 +147,7 @@
 +									const selectedRelease = releases[selectedIndex];
 +
 +									if (selectedRelease && selectedRelease.tag) {
-+										this.handleGithubInstall(selectedRelease.tag, keep.checked);
++										this.handleGithubInstall(selectedRelease.tag, keep.checked, githubRepo);
 +									} else {
 +										ui.showModal(_('Error'), [
 +											E('p', _('Invalid release selected')),
@@ -177,18 +178,18 @@
 +			});
 +	},
 +
-+	handleGithubInstall: function(tag, keep) {
++	handleGithubInstall: function(tag, keep, githubRepo) {
 +		ui.showModal(_('Downloading from GitHub...'), [
 +			E(
 +				'p',
 +				{ class: 'spinning' },
 +				_('Downloading firmware from GitHub to device')
- 			),
- 		]);
++			),
++		]);
 +
 +		// Call the CGI script to download the firmware to /tmp/firmware.bin
 +		// Pass the selected tag as a parameter to the github_fetch script
-+		fetch(`/cgi-bin/github_fetch?tag=${encodeURIComponent(tag)}`)
++		fetch(`/cgi-bin/github_fetch?tag=${encodeURIComponent(tag)}&repo=${encodeURIComponent(githubRepo)}`)
 +			.then(response => response.json())
 +			.then(data => {
 +				if (data.error) {
@@ -238,8 +239,35 @@
 +					]),
 +				]);
 +			});
- 	},
++	},
 +
  	handleSaveApply: null,
  	handleSave: null,
  	handleReset: null,
+--- a/feeds/luci/applications/luci-app-attendedsysupgrade/htdocs/luci-static/resources/view/attendedsysupgrade/configuration.js
++++ b/feeds/luci/applications/luci-app-attendedsysupgrade/htdocs/luci-static/resources/view/attendedsysupgrade/configuration.js
+@@ -32,6 +32,14 @@
+ 			)
+ 		);
+ 
++		o = s.option(
++			form.Value,
++			'github_repo',
++			_('GitHub Repository'),
++			_('GitHub repository for firmware releases (owner/name)')
++		);
++		o.placeholder = 'XXXXXX/YYYYYY';
++
+ 		s = m.section(form.TypedSection, 'client', _('Client'));
+ 		s.anonymous = true;
+ 
+--- a/feeds/packages/utils/attendedsysupgrade-common/files/attendedsysupgrade.defaults
++++ b/feeds/packages/utils/attendedsysupgrade-common/files/attendedsysupgrade.defaults
+@@ -7,6 +7,7 @@
+ uci -q batch <<EOF
+ set attendedsysupgrade.server=server
+ set attendedsysupgrade.server.url='https://sysupgrade.openwrt.org'
++set attendedsysupgrade.server.github_repo='XXXXXX/YYYYYY'
+ 
+ set attendedsysupgrade.client=client
+ set attendedsysupgrade.client.upgrade_packages='1'
