@@ -4,7 +4,7 @@ if [ -e /var/run/upgrade_openwrt ]; then
   printf "*** UPGRADE SCRIPT ALREADY RUNNING ***\n*** Delete '/var/run/upgrade_openwrt' if not. ***\n"
 else
   touch /var/run/upgrade_openwrt
-  GITHUBREPOSITORY='XXXXXX/XXXXXX'
+  GITHUBREPOSITORY='XXXXXX/YYYYYY'
   eval "$(grep -m 1 DISTRIB_REVISION /etc/openwrt_release)"
   SYSUPGRADEFILE=$(curl -sS https://api.github.com/repos/${GITHUBREPOSITORY}/releases/latest | jq -r --arg exclude "$DISTRIB_REVISION" '.assets[] | select(.browser_download_url | contains("sysupgrade")) | select((($exclude | length) == 0) or (.browser_download_url | contains($exclude) | not)) | .browser_download_url')
 
