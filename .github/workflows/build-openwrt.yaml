@@ -110,6 +110,14 @@ jobs:
           mv .config firmware/full.config ||:
           cd firmware && sha256sum openwrt-*-sysupgrade.bin >sha256sums ||:
 
+      - name: Rename firmware
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          COMMIT=$(git rev-parse --short HEAD)
+          for f in bin/targets/*/*/*sysupgrade.bin; do
+            mv "$f" "${f%.bin}-$DATE-$COMMIT.bin"
+          done
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v6.0.0
         with:
