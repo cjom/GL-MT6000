@@ -88,8 +88,6 @@ jobs:
         
           mv -v builder_repo/files ./
           chmod -v 755 files/usr/bin/upgrade_custom_openwrt files/www/cgi-bin/github_*
-          # IMPORTANTE: rendi eseguibile named
-          chmod -v 755 files/etc/init.d/named
 
           mv -v builder_repo/${{ env.CONFIG_FILE }} .config
           rm -rfv builder_repo
