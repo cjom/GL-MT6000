@@ -4,8 +4,10 @@
 MONITOR_SCRIPT="/etc/init.d/monitor"
 POSTFIX_SCRIPT="/etc/init.d/postfix-fix"
 DNS_SCRIPT="/root/99-update-and-notify-dns"
-HOTPLUG_LINK="/etc/hotplug.d/dhcp/99-update-and-notify-dns"
+HOTPLUG_DHCP_LINK="/etc/hotplug.d/dhcp/99-update-and-notify-dns"
+HOTPLUG_IFACE_LINK="/etc/hotplug.d/iface/99-update-ddns"
 NAMED_SCRIPT="/etc/init.d/named"
+DDNS_SCRIPT="/root/99-update-ddns"
 
 # Monitor
 if [ -f "$MONITOR_SCRIPT" ]; then
@@ -24,7 +26,13 @@ fi
 # DNS hotplug
 if [ -f "$DNS_SCRIPT" ]; then
     chmod +x "$DNS_SCRIPT"
-    ln -sf "$DNS_SCRIPT" "$HOTPLUG_LINK"
+    ln -sf "$DNS_SCRIPT" "$HOTPLUG_DHCP_LINK"
+fi
+
+# DDNS hotplug
+if [ -f "$DDNS_SCRIPT" ]; then
+    chmod +x "$DDNS_SCRIPT"
+    ln -sf "$DDNS_SCRIPT" "$HOTPLUG_IFACE_LINK"
 fi
 
 # Named (fix)
