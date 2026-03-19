@@ -5,6 +5,7 @@ MONITOR_SCRIPT="/etc/init.d/monitor"
 POSTFIX_SCRIPT="/etc/init.d/postfix-fix"
 DNS_SCRIPT="/root/99-update-and-notify-dns"
 HOTPLUG_LINK="/etc/hotplug.d/dhcp/99-update-and-notify-dns"
+NAMED_SCRIPT="/etc/init.d/named"
 
 # Monitor
 if [ -f "$MONITOR_SCRIPT" ]; then
@@ -25,5 +26,17 @@ if [ -f "$DNS_SCRIPT" ]; then
     chmod +x "$DNS_SCRIPT"
     ln -sf "$DNS_SCRIPT" "$HOTPLUG_LINK"
 fi
+
+# Named (fix)
+# Faccio il backup dello script di avvio originale e lo sostiuisco col mio personalizzato
+if [ -f "$NAMED_SCRIPT.pg" ]; then
+    if [ -f "$NAMED_SCRIPT" ]; then
+        mv "$NAMED_SCRIPT" "$NAMED_SCRIPT.orig"
+    fi
+    mv "$NAMED_SCRIPT.pg" "$NAMED_SCRIPT"
+    chmod 755 "$NAMED_SCRIPT"
+fi
+
+
 
 exit 0
