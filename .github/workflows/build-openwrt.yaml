@@ -116,13 +116,15 @@ jobs:
           COMMIT=$(git rev-parse --short HEAD)
       
           FILES=$(ls firmware/*sysupgrade.bin 2>/dev/null || true)
-      
+          echo $FILES
+          
           if [ -z "$FILES" ]; then
             echo "Nessun sysupgrade trovato in firmware/"
             exit 0
           fi
       
           for f in $FILES; do
+            echo $f
             mv "$f" "${f%.bin}-$DATE-$COMMIT.bin"
           done
 
