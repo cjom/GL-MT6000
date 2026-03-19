@@ -105,7 +105,7 @@ jobs:
           #fi
           # ----------------------------
           
-          ORIG_FILE=./etc/init.d/named
+          ORIG_FILE=files/etc/init.d/named
           mv "$ORIG_FILE" "${ORIG_FILE}.orig"
           mv -v builder_repo/files ./
           chmod -v 755 files/usr/bin/upgrade_custom_openwrt files/www/cgi-bin/github_*
