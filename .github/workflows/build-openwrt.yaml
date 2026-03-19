@@ -86,27 +86,6 @@ jobs:
           for file in $(grep -rl XXXXXX builder_repo/); do echo "Patching: $file"; sed -i 's|XXXXXX/YYYYYY|${{ github.repository }}|g' "$file" || exit 1; done
           patch -p1 < builder_repo/attendedsysupgrade-with-GitHub.patch
         
-          # ----------------------------
-          # Rinomina il file originale di named prima di sovrascrivere
-          #ORIG_FILE=package/network/services/bind/files/named.init
-          #if [ -f "$ORIG_FILE" ]; then
-          #    echo "Renaming original named.init to named.orig"
-          #    mv "$ORIG_FILE" "${ORIG_FILE}.orig"
-
-              # ----------------------------
-              # Metto il file named.orig nella build
-          #    OVERLAY_DIR=files/etc/init.d
-          #    mkdir -p "$OVERLAY_DIR"
-          #    cp "${ORIG_FILE}.orig" "$OVERLAY_DIR/named.orig"
-          #    echo "Backup named.orig is now in overlay: $OVERLAY_DIR/named.orig"
-              # ----------------------------
-          #else
-          #    echo "Warning: $ORIG_FILE not found, skipping backup"
-          #fi
-          # ----------------------------
-          
-          ORIG_FILE=files/etc/init.d/named
-          mv "$ORIG_FILE" "${ORIG_FILE}.orig"
           mv -v builder_repo/files ./
           chmod -v 755 files/usr/bin/upgrade_custom_openwrt files/www/cgi-bin/github_*
           # IMPORTANTE: rendi eseguibile named
