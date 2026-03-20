@@ -110,24 +110,23 @@ jobs:
           mv .config firmware/full.config ||:
           cd firmware && sha256sum openwrt-*-sysupgrade.bin >sha256sums ||:
 
-      - name: Rename firmware
+      - name: Rename firmware (clean name)
         run: |
           DATE=$(date +%Y-%m-%d)
-          COMMIT=$(git rev-parse --short HEAD)
+          COMMIT=${GITHUB_SHA::7}
+          DEVICE="mt6000"
       
           FILES=$(ls firmware/*sysupgrade.bin 2>/dev/null || true)
-          #echo $FILES
-          
+      
           if [ -z "$FILES" ]; then
             echo "Nessun sysupgrade trovato in firmware/"
             exit 0
           fi
       
           for f in $FILES; do
-            echo $f
-            NEW_FILE="${f%.bin}-$DATE-$COMMIT.bin"
-            echo $NEW_FILE
-            mv "$f" $NEW_FILE
+            NEW_FILE="firmware/${DEVICE}-${DATE}-${COMMIT}.bin"
+            echo "Renaming $f -> $NEW_FILE"
+            mv "$f" "$NEW_FILE"
           done
 
       - name: Upload artifacts
