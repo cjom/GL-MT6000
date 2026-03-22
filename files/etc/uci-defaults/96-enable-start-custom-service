@@ -8,6 +8,7 @@ HOTPLUG_DHCP_LINK="/etc/hotplug.d/dhcp/99-update-and-notify-dns"
 HOTPLUG_IFACE_LINK="/etc/hotplug.d/iface/99-update-ddns"
 NAMED_SCRIPT="/etc/init.d/named"
 DDNS_SCRIPT="/root/99-update-ddns"
+SYSTEMINFO_SCRIPT="/root/systemInfoJson.sh"
 
 # Monitor
 if [ -f "$MONITOR_SCRIPT" ]; then
@@ -45,6 +46,10 @@ if [ -f "$NAMED_SCRIPT.pg" ]; then
     chmod 755 "$NAMED_SCRIPT"
 fi
 
-
+# DDNS hotplug
+if [ -f "$SYSTEMINFO_SCRIPT" ]; then
+    chmod +x "$SYSTEMINFO_SCRIPT"
+    ln -sf "$SYSTEMINFO_SCRIPT" "/www/cgi-bin/systemInfoJson.sh"
+fi
 
 exit 0
