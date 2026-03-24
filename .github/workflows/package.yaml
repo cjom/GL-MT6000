@@ -1,0 +1,115 @@
+name: OpenWrt MT6000 PRO (pesa1234)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 0"
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential clang flex g++ gawk gcc-multilib \
+        gettext git libncurses-dev libssl-dev python3-distutils rsync unzip \
+        zlib1g-dev file wget curl ccache jq
+
+    # 🔥 CLONE pesa1234
+    - name: Clone pesa1234 OpenWrt
+      run: |
+        git clone https://github.com/pesa1234/openwrt.git openwrt
+        cd openwrt
+        git checkout main
+
+    # 📦 feeds già custom ma li aggiorniamo comunque
+    - name: Update feeds
+      run: |
+        cd openwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+
+    # ⚙️ CONFIG (la tua sopra la sua base)
+    - name: Apply custom config
+      run: |
+        cp mt6000.config openwrt/.config
+        cd openwrt
+        make defconfig
+
+    # 🔥 ABILITA PACKAGE (ma NON tutto indiscriminato)
+    - name: Enable extended packages
+      run: |
+        cd openwrt
+
+        # abilita molti package ma evita roba rotta
+        sed -i 's/# CONFIG_PACKAGE_/CONFIG_PACKAGE_/g' .config
+        sed -i 's/=n/=m/g' .config
+
+        # disabilita roba problematica comune
+        sed -i '/kmod-nvidia/d' .config || true
+        sed -i '/kmod-vbox/d' .config || true
+
+        make defconfig
+
+    # ⚙️ TOOLCHAIN
+    - name: Build toolchain
+      run: |
+        cd openwrt
+        make -j$(nproc) tools/install toolchain/install
+
+    # 🎯 TARGET (firmware)
+    - name: Build target
+      run: |
+        cd openwrt
+        make -j$(nproc) target/compile
+
+    # 📦 PACKAGE (tollerante)
+    - name: Build packages
+      run: |
+        cd openwrt
+        make -k -j$(nproc) package/compile V=s
+
+    # 📚 INDEX
+    - name: Generate repo
+      run: |
+        cd openwrt
+        make package/index
+
+    # 🏷️ PREP RELEASE
+    - name: Prepare release
+      run: |
+        cd openwrt
+
+        DATE=$(date +%Y-%m-%d)
+        COMMIT=$(git rev-parse --short HEAD)
+
+        mkdir -p release/firmware
+        mkdir -p release/packages
+
+        cp -r bin/targets/*/* release/firmware/
+        cp -r bin/packages/* release/packages/
+
+        echo "DATE=$DATE" >> $GITHUB_ENV
+        echo "COMMIT=$COMMIT" >> $GITHUB_ENV
+
+    # 📦 COMPRESS (fondamentale)
+    - name: Compress packages
+      run: |
+        cd openwrt/release
+        tar -czf packages.tar.gz packages
+
+    # 🚀 RELEASE
+    - name: Publish Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: mt6000-${{ env.DATE }}-${{ env.COMMIT }}
+        name: MT6000 Build ${{ env.DATE }}
+        files: |
+          openwrt/release/firmware/**
+          openwrt/release/packages.tar.gz
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
