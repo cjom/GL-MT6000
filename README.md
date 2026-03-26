@@ -19,7 +19,7 @@ And also:
 - Added the needed packages to use QoS script [cake-wg-pbr](https://github.com/lynxthecat/cake-wg-pbr)
 - Some compiler optimizations and build hardening options (cortex-a53+crc+crypto; LTO, MOLD, and more).
 - SSH configuration with strong algorithms and key exchange methods. Check the content of [`ssh_hardening.config`](files/etc/ssh/sshd_config.d/ssh_hardening.conf) and [`sshd_config`](files/etc/ssh/sshd_config).
-- Quality-of-life enhancements through UCI configuration. Check the content of [`999-QOL_config`](files/etc/uci-defaults/999-QOL_config).
+- Quality-of-life enhancements through UCI configuration. Check the content of [`99-QOL_config`](files/etc/uci-defaults/99-QOL_config).
 - Some debug and kernel stuff removed.
 - [`upgrade_custom_openwrt`](files/usr/bin/upgrade_custom_openwrt) script
 
