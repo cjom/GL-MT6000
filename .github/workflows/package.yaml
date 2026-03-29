@@ -38,21 +38,30 @@ jobs:
       run: |
         cp mt6000.config openwrt/.config
         cd openwrt
+        # Validate config syntax before defconfig
+        if ! grep -E '^[A-Z_]+=|^# CONFIG_' .config | head -20 >/dev/null; then
+          echo "WARNING: Config file may have syntax issues"
+        fi
         make defconfig
 
     # 🔥 ABILITA PACKAGE (ma NON tutto indiscriminato)
     - name: Enable extended packages
       run: |
         cd openwrt
-
-        # abilita molti package ma evita roba rotta
-        sed -i 's/# CONFIG_PACKAGE_/CONFIG_PACKAGE_/g' .config
-        sed -i 's/=n/=m/g' .config
-
-        # disabilita roba problematica comune
+        
+        # Only enable specific safe packages, don't blindly enable everything
+        # sed -i 's/# CONFIG_PACKAGE_/CONFIG_PACKAGE_/g' .config  # REMOVE THIS
+        # sed -i 's/=n/=m/g' .config  # REMOVE THIS
+        
+        # Instead, explicitly disable problematic packages
+        sed -i '/CONFIG_PACKAGE_fwupd/d' .config || true
+        sed -i '/FWUPD_PLUGIN_FLASHROM/d' .config || true
         sed -i '/kmod-nvidia/d' .config || true
         sed -i '/kmod-vbox/d' .config || true
-
+        sed -i '/python3-pkg-resources/d' .config || true
+        sed -i '/python3-pysocks/d' .config || true
+        sed -i '/python3-unidecode/d' .config || true
+        
         make defconfig
 
     # ⚙️ TOOLCHAIN
