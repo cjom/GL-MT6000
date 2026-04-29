@@ -113,7 +113,7 @@ jobs:
           gh release create "${{ needs.check_commits.outputs.release_prefix }}-${RELEASE_DATE}" --repo "${{ github.repository }}" --latest --notes "### 🔄 Main Repository
           - **Repository:** [${{ env.REMOTE_REPOSITORY }}](https://github.com/${{ env.REMOTE_REPOSITORY }})
           - **Branch:** ${{ needs.check_commits.outputs.remote_branch }}
-          - **Commit:** ${{ needs.check_commits.outputs.latest_commit_sha }}
+          - **Commit:** [${{ needs.check_commits.outputs.latest_commit_sha }}](https://github.com/${{ env.REMOTE_REPOSITORY }}/tree/${{ needs.check_commits.outputs.latest_commit_sha }})
           
           ### 📝 Build Information
           - **Target:** [Flint 2 (GL-MT6000)](https://openwrt.org/toh/gl.inet/gl-mt6000)
