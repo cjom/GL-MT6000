@@ -28,6 +28,16 @@ Check the content of [`mt6000.config`](mt6000.config) for details.
 
 
 
+## About adding or updating single packages
+
+`apk update` wont work.
+For that, I would need to compile and host every possible package every time a new firmware was compiled (using a lot of time compiling packages that I don't use and brake GitHub limits for my free account).
+Instead, I just compile a new firmware with all the packages I need.
+
+If you want something that is not included in the firmware you can either search in [other people forks](https://github.com/cjom/GL-MT6000/forks) if someone have what you want or create a new fork and customize it to your needs.
+My suggestion is to create your own fork, you can then control exactly what you want included.
+
+
 ## About Custom Attended Sysupgrade
 
 Using Luci's menu "System" --> "Attended Sysupgrade" it is now possible to select and install custom firmware from GitHub.
